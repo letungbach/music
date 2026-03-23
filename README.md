@@ -37,4 +37,4 @@ This exercise is designed for music students learning to associate solfège syll
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
