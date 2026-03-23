@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Tập Xướng Âm Số 1</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        :root {
+            --cream: #f5f0e8;
+            --parchment: #ede5d0;
+            --ink: #1a1209;
+            --sepia: #6b4f2a;
+            --gold: #c8922a;
+            --gold-light: #e8b84b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--cream);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Cormorant Garamond', serif;
+            padding: 40px 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(120, 90, 40, 0.04) 24px, rgba(120, 90, 40, 0.04) 25px),
+                radial-gradient(ellipse at 20% 20%, rgba(200, 146, 42, 0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 920px;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeDown 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .header-ornament {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .ornament-line {
+            height: 1px;
+            width: 80px;
+            background: linear-gradient(to right, transparent, var(--gold), transparent);
+        }
+
+        .ornament-diamond {
+            width: 7px;
+            height: 7px;
+            background: var(--gold);
+            transform: rotate(45deg);
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.1rem, 3vw, 1.55rem);
+            color: var(--ink);
+            letter-spacing: 0.03em;
+            line-height: 1.4;
+        }
+
+        .header h1 em {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+        .header .subtitle {
+            font-size: 0.88rem;
+            color: var(--sepia);
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 300;
+            margin-top: 8px;
+        }
+
+        /* ── Score card ── */
+        .score-card {
+            background: var(--parchment);
+            border: 1px solid rgba(120, 90, 40, 0.25);
+            border-radius: 2px;
+            box-shadow: 0 2px 0 rgba(200, 146, 42, 0.15), 0 8px 40px rgba(26, 18, 9, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            padding: 36px 24px 32px;
+            position: relative;
+            animation: fadeUp 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+        }
+
+        .score-card::before,
+        .score-card::after {
+            content: '✦';
+            position: absolute;
+            font-size: 11px;
+            color: var(--gold);
+            opacity: 0.7;
+        }
+
+        .score-card::before {
+            top: 10px;
+            left: 14px;
+        }
+
+        .score-card::after {
+            top: 10px;
+            right: 14px;
+        }
+
+        #score {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        #score svg {
+            display: block;
+            width: 100%;
+        }
+
+        /* ── Instrument selector ── */
+        .controls {
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid rgba(120, 90, 40, 0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            animation: fadeUp 1s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+        }
+
+        .instrument-label {
+            font-size: 0.78rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--sepia);
+        }
+
+        .instrument-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .inst-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            border: 1.5px solid rgba(120, 90, 40, 0.3);
+            border-radius: 2px;
+            background: transparent;
+            color: var(--sepia);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.95rem;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .inst-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gold);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .inst-btn:hover::before {
+            opacity: 0.08;
+        }
+
+        .inst-btn.active {
+            border-color: var(--gold);
+            color: var(--ink);
+            background: rgba(200, 146, 42, 0.1);
+            box-shadow: 0 0 0 1px rgba(200, 146, 42, 0.3);
+        }
+
+        .inst-btn .icon {
+            font-size: 1.15rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .inst-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Play button ── */
+        .play-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .play-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 32px;
+            background: var(--gold);
+            border: none;
+            border-radius: 2px;
+            color: #fff;
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            box-shadow: 0 2px 12px rgba(200, 146, 42, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .play-btn:hover {
+            background: var(--gold-light);
+            box-shadow: 0 4px 20px rgba(200, 146, 42, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .play-btn:active {
+            transform: translateY(0);
+        }
+
+        .play-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .play-btn .play-icon {
+            font-size: 1.1rem;
+        }
+
+        .stop-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 24px;
+            background: transparent;
+            border: 1.5px solid rgba(120, 90, 40, 0.35);
+            border-radius: 2px;
+            color: var(--sepia);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.95rem;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .stop-btn:hover {
+            border-color: var(--rust, #8b3a1a);
+            color: var(--rust, #8b3a1a);
+            background: rgba(139, 58, 26, 0.05);
+        }
+
+        .stop-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .status-text {
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--sepia);
+            min-width: 120px;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        /* ── Legend ── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 22px;
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(120, 90, 40, 0.18);
+            animation: fadeUp 1s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.82rem;
+            color: var(--sepia);
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gold);
+            flex-shrink: 0;
+        }
+
+        .legend-note {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--ink);
+            font-size: 0.88rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.78rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(107, 79, 42, 0.5);
+            animation: fadeUp 1s cubic-bezier(0.22, 1, 0.36, 1) 0.7s both;
+        }
+
+        .error-msg {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 16px 20px;
+            color: #856404;
+            font-family: monospace;
+            font-size: 0.82rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Highlight active note on score */
+        .note-highlight {
+            animation: noteGlow 0.25s ease;
+        }
+
+        @keyframes noteGlow {
+            0% {
+                opacity: 0.4
+            }
+
+            50% {
+                opacity: 1
+            }
+
+            100% {
+                opacity: 1
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header class="header">
+            <div class="header-ornament">
+                <div class="ornament-line"></div>
+                <div class="ornament-diamond"></div>
+                <div class="ornament-line"></div>
+            </div>
+            <h1>BÀI TẬP XƯỚNG ÂM SỐ 1<br><em>Giọng F-dur (Fa trưởng)</em></h1>
+            <p class="subtitle">Treble Clef · 4 ∕ 4 · Key of F Major</p>
+        </header>
+
+        <div class="score-card">
+            <div id="score"></div>
+
+            <!-- Playback controls -->
+            <div class="controls">
+                <div class="instrument-label">Chọn nhạc cụ</div>
+                <div class="instrument-buttons">
+                    <button class="inst-btn active" data-inst="piano"> <span
+                            class="icon">🎹</span><span>Piano</span></button>
+                    <button class="inst-btn" data-inst="violin"> <span
+                            class="icon">🎻</span><span>Violin</span></button>
+                    <button class="inst-btn" data-inst="guitar"> <span
+                            class="icon">🎸</span><span>Guitar</span></button>
+                    <button class="inst-btn" data-inst="cello"> <span class="icon">🎻</span><span>Cello</span></button>
+                    <button class="inst-btn" data-inst="vocal"> <span class="icon">🎤</span><span>Vocal</span></button>
+                </div>
+                <div class="play-row">
+                    <button class="play-btn" id="playBtn"><span class="play-icon">▶</span> Phát nhạc</button>
+                    <button class="stop-btn" id="stopBtn" disabled>■ Dừng</button>
+                    <span class="status-text" id="statusText">Sẵn sàng</span>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot"></div><span class="legend-note">Fa</span><span>F</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot"></div><span class="legend-note">Sol</span><span>G</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot"></div><span class="legend-note">La</span><span>A</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot"></div><span class="legend-note">Ti</span><span>B♭</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot"></div><span class="legend-note">Do</span><span>C</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot"></div><span class="legend-note">Rê</span><span>D</span>
+                </div>
+            </div>
+        </div>
+        <p class="footer">♩ = Quarter &nbsp;·&nbsp; 𝅗𝅥 = Half &nbsp;·&nbsp; ♪ = Eighth</p>
+    </div>
+
+    <script>
+        // ─────────────────────────────────────────────
+        // 1. RENDER SCORE
+        // ─────────────────────────────────────────────
+        window.addEventListener("load", function () {
+            const scoreDiv = document.getElementById("score");
+            try {
+                const { Renderer, Stave, StaveNote, Voice, Formatter, Annotation, Accidental, Beam, BarlineType } = Vex.Flow;
+
+                const SVG_W = 860;
+                const STAVE_H = 140;
+                const SVG_H = STAVE_H * 2 + 40;
+
+                const renderer = new Renderer(scoreDiv, Renderer.Backends.SVG);
+                renderer.resize(SVG_W, SVG_H);
+                const ctx = renderer.getContext();
+                ctx.setFillStyle("#1a1209");
+                ctx.setStrokeStyle("#1a1209");
+
+                function n(keys, dur, sol, acc) {
+                    const sn = new StaveNote({ keys, duration: dur });
+                    if (acc) sn.addModifier(new Accidental(acc), 0);
+                    if (sol) {
+                        sn.addModifier(
+                            new Annotation(sol).setFont("Georgia", 11)
+                                .setVerticalJustification(Annotation.VerticalJustify.BOTTOM),
+                            0
+                        );
+                    }
+                    return sn;
+                }
+
+                // Stave 1
+                const stave1 = new Stave(10, 20, SVG_W - 20);
+                stave1.addClef("treble").addTimeSignature("4/4").addKeySignature("F");
+                stave1.setContext(ctx).draw();
+
+                const bar1 = [
+                    n(["f/4"], "q", "Fa"),
+                    n(["g/4"], "q", "Sol"),
+                    n(["a/4"], "q", "La"),
+                    n(["b/4"], "q", "Ti", "b"),
+                ];
+                const bar2 = [
+                    n(["c/5"], "8", "Do"),
+                    n(["d/5"], "8", "Rê"),
+                    n(["c/5"], "q", "Do"),
+                    n(["a/4"], "h", "La"),
+                ];
+                const beam1 = new Beam([bar2[0], bar2[1]]);
+                const voice1 = new Voice({ num_beats: 8, beat_value: 4 });
+                voice1.setMode(Voice.Mode.SOFT);
+                voice1.addTickables([...bar1, ...bar2]);
+                new Formatter().joinVoices([voice1]).format([voice1], SVG_W - 160);
+                voice1.draw(ctx, stave1);
+                beam1.setContext(ctx).draw();
+
+                const bx1 = bar1[3].getAbsoluteX() + bar1[3].getWidth() + 10;
+                ctx.beginPath(); ctx.moveTo(bx1, stave1.getYForLine(0)); ctx.lineTo(bx1, stave1.getYForLine(4)); ctx.setLineWidth(1.5); ctx.stroke();
+
+                // Stave 2
+                const stave2 = new Stave(10, 20 + STAVE_H, SVG_W - 20);
+                stave2.addClef("treble").addKeySignature("F");
+                try { stave2.setEndBarType(BarlineType.END); } catch (e) { stave2.setEndBarType(3); }
+                stave2.setContext(ctx).draw();
+
+                const bar3 = [
+                    n(["c/5"], "q", "Do"),
+                    n(["b/4"], "q", "Ti", "b"),
+                    n(["a/4"], "q", "La"),
+                    n(["g/4"], "q", "Sol"),
+                ];
+                const bar4 = [
+                    n(["f/4"], "8", "Fa"),
+                    n(["a/4"], "8", "La"),
+                    n(["g/4"], "q", "Sol"),
+                    n(["f/4"], "h", "Fa"),
+                ];
+                const beam2 = new Beam([bar4[0], bar4[1]]);
+                const voice2 = new Voice({ num_beats: 8, beat_value: 4 });
+                voice2.setMode(Voice.Mode.SOFT);
+                voice2.addTickables([...bar3, ...bar4]);
+                new Formatter().joinVoices([voice2]).format([voice2], SVG_W - 160);
+                voice2.draw(ctx, stave2);
+                beam2.setContext(ctx).draw();
+
+                const bx2 = bar3[3].getAbsoluteX() + bar3[3].getWidth() + 10;
+                ctx.beginPath(); ctx.moveTo(bx2, stave2.getYForLine(0)); ctx.lineTo(bx2, stave2.getYForLine(4)); ctx.setLineWidth(1.5); ctx.stroke();
+
+                // Recolor to sepia
+                const svg = scoreDiv.querySelector("svg");
+                if (svg) {
+                    svg.querySelectorAll("path,rect,circle,ellipse,polygon,line").forEach(el => {
+                        const fill = el.getAttribute("fill");
+                        const stroke = el.getAttribute("stroke");
+                        if (fill && fill !== "none" && fill.toLowerCase() !== "#ffffff" && fill !== "white") el.setAttribute("fill", "#1a1209");
+                        if (stroke && stroke !== "none") el.setAttribute("stroke", "#1a1209");
+                    });
+                }
+
+            } catch (err) {
+                scoreDiv.innerHTML = "<div class='error-msg'>⚠ Render error:\n" + err.message + "\n\n" + err.stack + "</div>";
+                console.error(err);
+            }
+        });
+
+        // ─────────────────────────────────────────────
+        // 2. AUDIO PLAYBACK
+        // ─────────────────────────────────────────────
+
+        // Note sequence: [pitch, durationSeconds]
+        // BPM=72 → quarter=0.833s, half=1.667s, eighth=0.417s
+        const BPM = 72;
+        const Q = 60 / BPM;        // quarter
+        const H = Q * 2;            // half
+        const E = Q / 2;            // eighth
+
+        const SEQUENCE = [
+            // Bar 1
+            { note: "F4", dur: Q },
+            { note: "G4", dur: Q },
+            { note: "A4", dur: Q },
+            { note: "Bb4", dur: Q },
+            // Bar 2
+            { note: "C5", dur: E },
+            { note: "D5", dur: E },
+            { note: "C5", dur: Q },
+            { note: "A4", dur: H },
+            // Bar 3
+            { note: "C5", dur: Q },
+            { note: "Bb4", dur: Q },
+            { note: "A4", dur: Q },
+            { note: "G4", dur: Q },
+            // Bar 4
+            { note: "F4", dur: E },
+            { note: "A4", dur: E },
+            { note: "G4", dur: Q },
+            { note: "F4", dur: H },
+        ];
+
+        // Instrument synth presets using Tone.js
+        function buildSynth(instrument) {
+            switch (instrument) {
+                case "piano":
+                    return new Tone.Synth({
+                        oscillator: { type: "triangle" },
+                        envelope: { attack: 0.005, decay: 0.3, sustain: 0.2, release: 1.2 },
+                        volume: -6
+                    }).toDestination();
+
+                case "violin":
+                    return new Tone.Synth({
+                        oscillator: { type: "sawtooth" },
+                        envelope: { attack: 0.12, decay: 0.1, sustain: 0.85, release: 0.6 },
+                        volume: -8,
+                        filterEnvelope: { attack: 0.08, decay: 0.1, sustain: 0.6, release: 0.4, baseFrequency: 500, octaves: 2 }
+                    }).toDestination();
+
+                case "guitar":
+                    return new Tone.PluckSynth({
+                        attackNoise: 1,
+                        dampening: 4000,
+                        resonance: 0.97,
+                        volume: -4
+                    }).toDestination();
+
+                case "cello":
+                    return new Tone.Synth({
+                        oscillator: { type: "sawtooth" },
+                        envelope: { attack: 0.18, decay: 0.15, sustain: 0.8, release: 0.9 },
+                        volume: -6,
+                        filterEnvelope: { attack: 0.15, decay: 0.15, sustain: 0.5, release: 0.5, baseFrequency: 300, octaves: 1.5 }
+                    }).toDestination();
+
+                case "vocal":
+                    // A synthetic "singing" voice using FM synthesis, vibrato, and reverb
+                    const vocalSynth = new Tone.FMSynth({
+                        harmonicity: 3,
+                        modulationIndex: 10,
+                        oscillator: { type: "sine" },
+                        envelope: { attack: 0.2, decay: 0.1, sustain: 0.9, release: 2 },
+                        modulation: { type: "square" },
+                        modulationEnvelope: { attack: 0.1, decay: 0.2, sustain: 0.6, release: 1 },
+                        volume: -10
+                    });
+                    const vibratoNode = new Tone.Vibrato(5.5, 0.15);
+                    const reverbNode = new Tone.Reverb(1.5).toDestination();
+                    vocalSynth.connect(vibratoNode);
+                    vibratoNode.connect(reverbNode);
+                    return vocalSynth;
+
+                default:
+                    return new Tone.Synth().toDestination();
+            }
+        }
+
+        let currentInstrument = "piano";
+        let synth = null;
+        let playbackTimeouts = [];
+        let isPlaying = false;
+
+        // Instrument button selection
+        document.querySelectorAll(".inst-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                if (isPlaying) return; // prevent switching while playing
+                document.querySelectorAll(".inst-btn").forEach(b => b.classList.remove("active"));
+                this.classList.add("active");
+                currentInstrument = this.dataset.inst;
+            });
+        });
+
+        // Play button
+        document.getElementById("playBtn").addEventListener("click", async function () {
+            if (isPlaying) return;
+
+            await Tone.start(); // resume AudioContext (required by browsers)
+
+            // Dispose old synth
+            if (synth) { try { synth.dispose(); } catch (e) { } synth = null; }
+            synth = buildSynth(currentInstrument);
+
+            isPlaying = true;
+            document.getElementById("playBtn").disabled = true;
+            document.getElementById("stopBtn").disabled = false;
+            document.querySelectorAll(".inst-btn").forEach(b => b.style.pointerEvents = "none");
+
+            const statusEl = document.getElementById("statusText");
+            statusEl.textContent = "Đang phát...";
+
+            let elapsed = 0;
+            playbackTimeouts = [];
+
+            SEQUENCE.forEach(function (item, idx) {
+                const t = elapsed;
+                const d = item.dur;
+                elapsed += d;
+
+                const tid = setTimeout(function () {
+                    if (!isPlaying) return;
+                    try {
+                        // PluckSynth uses triggerAttack only
+                        if (currentInstrument === "guitar") {
+                            synth.triggerAttack(item.note, Tone.now());
+                        } else {
+                            synth.triggerAttackRelease(item.note, d * 0.85, Tone.now());
+                        }
+                    } catch (e) { console.warn("Note error:", e); }
+
+                    statusEl.textContent = item.note;
+                }, t * 1000);
+
+                playbackTimeouts.push(tid);
+            });
+
+            // End of playback
+            const endTid = setTimeout(function () {
+                stopPlayback();
+                statusEl.textContent = "Hoàn thành ✓";
+                setTimeout(() => { if (!isPlaying) statusEl.textContent = "Sẵn sàng"; }, 1800);
+            }, elapsed * 1000 + 200);
+            playbackTimeouts.push(endTid);
+        });
+
+        // Stop button
+        document.getElementById("stopBtn").addEventListener("click", function () {
+            stopPlayback();
+            document.getElementById("statusText").textContent = "Đã dừng";
+            setTimeout(() => { if (!isPlaying) document.getElementById("statusText").textContent = "Sẵn sàng"; }, 1200);
+        });
+
+        function stopPlayback() {
+            isPlaying = false;
+            playbackTimeouts.forEach(clearTimeout);
+            playbackTimeouts = [];
+            if (synth) {
+                try {
+                    if (synth.releaseAll) synth.releaseAll();
+                    else if (synth.triggerRelease) synth.triggerRelease(Tone.now());
+                } catch (e) { }
+            }
+            document.getElementById("playBtn").disabled = false;
+            document.getElementById("stopBtn").disabled = true;
+            document.querySelectorAll(".inst-btn").forEach(b => b.style.pointerEvents = "");
+        }
+    </script>
+</body>
+
+</html>
